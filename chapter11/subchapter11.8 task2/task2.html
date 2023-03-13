@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+
+<body>
+
+<script charset="utf-8" type="text/javascript">
+    class HttpError extends Error {
+        constructor(response) {
+            super(`${response.status} for ${response.url}`);
+            this.name = 'HttpError';
+            this.response = response;
+        }
+    }
+
+    async function loadJson(url) {
+        let response = await fetch(url);
+        if (response.status == 200) {
+            return response.json();
+        } else {
+            throw new HttpError(response);
+        }
+    }
+
+    // Запрашивать логин, пока github не вернёт существующего пользователя.
+    async function demoGithubUser() {
+        while (true) {
+            let name = prompt("Input login?", "iliakan");
+
+            try {
+                let user = await loadJson(`https://api.github.com/users/${name}`);
+                return alert(`Full name: ${user.name}.`);
+            } catch (err) {
+                if (err instanceof HttpError && err.response.status == 404) {
+                    // после alert начнётся новая итерация цикла
+                    alert("This user does not exist, please, input again.");
+                } else {
+                    // неизвестная ошибка, пробрасываем её
+                    throw err;
+                }
+            }
+        }
+    }
+
+    demoGithubUser();
+
+</script>
+
+
+</body>
+
+</html>
